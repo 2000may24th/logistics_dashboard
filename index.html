@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -7,48 +6,183 @@
     <title>연도별 OD 물동량 지도 대시보드</title>
     <style>
         body, html {
-            height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 
-            Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            display: flex; overflow: hidden; background-color: #e9ecef;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            overflow: hidden;
         }
-        .sidebar {
-            width: 280px; background-color: #f8f9fa; border-right: 1px solid #dee2e6;
-            display: flex; flex-direction: column; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-        }
-        .sidebar-header { padding: 15px; border-bottom: 1px solid #dee2e6; }
-        .sidebar-header h2 { font-size: 1.3em; color: #343a40; margin: 0 0 15px 0; }
-        .year-selector { display: flex; gap: 10px; }
-        .year-selector label {
-            flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;
-            text-align: center; cursor: pointer; transition: all 0.2s ease;
-        }
-        .year-selector input[type="radio"] { display: none; }
-        .year-selector input[type="radio"]:checked + label {
-            background-color: #007bff; color: white; border-color: #007bff; font-weight: bold;
-        }
-        .item-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
-        .item-list ul { list-style: none; padding: 0; margin: 0; }
-        .item-list li a {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 15px; text-decoration: none; color: #495057;
-            border-radius: 5px; margin-bottom: 5px; transition: all 0.2s ease;
-        }
-        .item-list li a:hover { background-color: #e9ecef; }
-        .item-list li a.active { background-color: #007bff; color: white; }
-        .item-number {
-            font-weight: bold; color: #888; background-color: #e9ecef;
-            padding: 2px 8px; border-radius: 10px; font-size: 0.8em; margin-right: 10px;
-        }
-        .item-name { text-align: right; flex-grow: 1; }
-        .item-list li a.active .item-number { background-color: #fff; color: #007bff; }
-        .item-list li a.active .item-name { color: #fff; }
 
-        .content { flex-grow: 1; height: 100%; }
-        iframe { width: 100%; height: 100%; border: none; }
+        #map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 100%;
+            background-color: rgba(248, 249, 250, 0.95);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.4em;
+            color: #343a40;
+            margin: 0 0 15px 0;
+        }
+
+        .year-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .year-selector label {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .year-selector input[type="radio"] {
+            display: none;
+        }
+
+        .year-selector input[type="radio"]:checked+label {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+
+        .item-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .item-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #495057;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .item-list li a:hover {
+            background-color: #e9ecef;
+        }
+
+        .item-list li a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .item-number {
+            font-weight: bold;
+            color: #888;
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+
+        .item-name {
+            text-align: right;
+            flex-grow: 1;
+        }
+
+        .item-list li a.active .item-number {
+            background-color: #fff;
+            color: #007bff;
+        }
+
+        .item-list li a.active .item-name {
+            color: #fff;
+        }
+
+        #toggle-button {
+            position: absolute;
+            top: 15px;
+            left: 315px;
+            width: 40px;
+            height: 40px;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 11;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s ease-in-out;
+        }
+        
+        #toggle-button.collapsed {
+            left: 15px;
+        }
+
+        #toggle-button svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        #toggle-button.collapsed svg {
+             transform: rotate(180deg);
+        }
+
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <div id="map-container">
+        <iframe name="mapFrame"></iframe>
+    </div>
+
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>🗺️ 지도 대시보드</h2>
             <div class="year-selector">
@@ -60,47 +194,58 @@
         </div>
         <div class="item-list">
             <ul id="itemList"><li><a href="#" id="link-01" onclick="loadMap('01', '농산물'); return false;"><span class="item-number">01</span><span class="item-name">농산물</span></a></li>
-<li><a href="#" id="link-02" onclick="loadMap('02', '임산물'); return false;"><span class="item-number">02</span><span class="item-name">임산물</span></a></li>
-<li><a href="#" id="link-03" onclick="loadMap('03', '수산물'); return false;"><span class="item-number">03</span><span class="item-name">수산물</span></a></li>
-<li><a href="#" id="link-04" onclick="loadMap('04', '축산물'); return false;"><span class="item-number">04</span><span class="item-name">축산물</span></a></li>
-<li><a href="#" id="link-05" onclick="loadMap('05', '석탄광물'); return false;"><span class="item-number">05</span><span class="item-name">석탄광물</span></a></li>
-<li><a href="#" id="link-06" onclick="loadMap('06', '석회석광물'); return false;"><span class="item-number">06</span><span class="item-name">석회석광물</span></a></li>
-<li><a href="#" id="link-09" onclick="loadMap('09', '비금속광물'); return false;"><span class="item-number">09</span><span class="item-name">비금속광물</span></a></li>
-<li><a href="#" id="link-10" onclick="loadMap('10', '음식료품'); return false;"><span class="item-number">10</span><span class="item-name">음식료품</span></a></li>
-<li><a href="#" id="link-11" onclick="loadMap('11', '담배제품'); return false;"><span class="item-number">11</span><span class="item-name">담배제품</span></a></li>
-<li><a href="#" id="link-12" onclick="loadMap('12', '섬유제품;의복제외'); return false;"><span class="item-number">12</span><span class="item-name">섬유제품;의복제외</span></a></li>
-<li><a href="#" id="link-13" onclick="loadMap('13', '의복,의복엑세서리및모피제품'); return false;"><span class="item-number">13</span><span class="item-name">의복,의복엑세서리및모피제품</span></a></li>
-<li><a href="#" id="link-14" onclick="loadMap('14', '가죽,가방및신발제품'); return false;"><span class="item-number">14</span><span class="item-name">가죽,가방및신발제품</span></a></li>
-<li><a href="#" id="link-15" onclick="loadMap('15', '목재및나무제품(가구제외)'); return false;"><span class="item-number">15</span><span class="item-name">목재및나무제품(가구제외)</span></a></li>
-<li><a href="#" id="link-16" onclick="loadMap('16', '펄프,종이및종이제품'); return false;"><span class="item-number">16</span><span class="item-name">펄프,종이및종이제품</span></a></li>
-<li><a href="#" id="link-17" onclick="loadMap('17', '인쇄및기록매체'); return false;"><span class="item-number">17</span><span class="item-name">인쇄및기록매체</span></a></li>
-<li><a href="#" id="link-18" onclick="loadMap('18', '코크스,연탄및석유정제품'); return false;"><span class="item-number">18</span><span class="item-name">코크스,연탄및석유정제품</span></a></li>
-<li><a href="#" id="link-19" onclick="loadMap('19', '화합물및화학제품'); return false;"><span class="item-number">19</span><span class="item-name">화합물및화학제품</span></a></li>
-<li><a href="#" id="link-20" onclick="loadMap('20', '고무제품및플라스틱제품'); return false;"><span class="item-number">20</span><span class="item-name">고무제품및플라스틱제품</span></a></li>
-<li><a href="#" id="link-21" onclick="loadMap('21', '비금속광물제품'); return false;"><span class="item-number">21</span><span class="item-name">비금속광물제품</span></a></li>
-<li><a href="#" id="link-22" onclick="loadMap('22', '제1차금속제품'); return false;"><span class="item-number">22</span><span class="item-name">제1차금속제품</span></a></li>
-<li><a href="#" id="link-23" onclick="loadMap('23', '금속가공제품;기계및가구제외'); return false;"><span class="item-number">23</span><span class="item-name">금속가공제품;기계및가구제외</span></a></li>
-<li><a href="#" id="link-24" onclick="loadMap('24', '기타기계및장비제조품'); return false;"><span class="item-number">24</span><span class="item-name">기타기계및장비제조품</span></a></li>
-<li><a href="#" id="link-25" onclick="loadMap('25', '전자부품,컴퓨터,영상,음향및통신장비'); return false;"><span class="item-number">25</span><span class="item-name">전자부품,컴퓨터,영상,음향및통신장비</span></a></li>
-<li><a href="#" id="link-26" onclick="loadMap('26', '전기장비제품'); return false;"><span class="item-number">26</span><span class="item-name">전기장비제품</span></a></li>
-<li><a href="#" id="link-27" onclick="loadMap('27', '의료,정밀,광학기기및시계'); return false;"><span class="item-number">27</span><span class="item-name">의료,정밀,광학기기및시계</span></a></li>
-<li><a href="#" id="link-28" onclick="loadMap('28', '자동차및트레일러'); return false;"><span class="item-number">28</span><span class="item-name">자동차및트레일러</span></a></li>
-<li><a href="#" id="link-29" onclick="loadMap('29', '기타운송장비'); return false;"><span class="item-number">29</span><span class="item-name">기타운송장비</span></a></li>
-<li><a href="#" id="link-30" onclick="loadMap('30', '가구제품'); return false;"><span class="item-number">30</span><span class="item-name">가구제품</span></a></li>
-<li><a href="#" id="link-31" onclick="loadMap('31', '기타제품'); return false;"><span class="item-number">31</span><span class="item-name">기타제품</span></a></li>
-<li><a href="#" id="link-32" onclick="loadMap('32', '도매제품'); return false;"><span class="item-number">32</span><span class="item-name">도매제품</span></a></li>
-<li><a href="#" id="link-33" onclick="loadMap('33', '컨테이너'); return false;"><span class="item-number">33</span><span class="item-name">컨테이너</span></a></li>
-<li><a href="#" id="link-34" onclick="loadMap('34', '전체'); return false;"><span class="item-number">34</span><span class="item-name">전체</span></a></li>
-</ul>
+                <li><a href="#" id="link-02" onclick="loadMap('02', '임산물'); return false;"><span class="item-number">02</span><span class="item-name">임산물</span></a></li>
+                <li><a href="#" id="link-03" onclick="loadMap('03', '수산물'); return false;"><span class="item-number">03</span><span class="item-name">수산물</span></a></li>
+                <li><a href="#" id="link-04" onclick="loadMap('04', '축산물'); return false;"><span class="item-number">04</span><span class="item-name">축산물</span></a></li>
+                <li><a href="#" id="link-05" onclick="loadMap('05', '석탄광물'); return false;"><span class="item-number">05</span><span class="item-name">석탄광물</span></a></li>
+                <li><a href="#" id="link-06" onclick="loadMap('06', '석회석광물'); return false;"><span class="item-number">06</span><span class="item-name">석회석광물</span></a></li>
+                <li><a href="#" id="link-09" onclick="loadMap('09', '비금속광물'); return false;"><span class="item-number">09</span><span class="item-name">비금속광물</span></a></li>
+                <li><a href="#" id="link-10" onclick="loadMap('10', '음식료품'); return false;"><span class="item-number">10</span><span class="item-name">음식료품</span></a></li>
+                <li><a href="#" id="link-11" onclick="loadMap('11', '담배제품'); return false;"><span class="item-number">11</span><span class="item-name">담배제품</span></a></li>
+                <li><a href="#" id="link-12" onclick="loadMap('12', '섬유제품;의복제외'); return false;"><span class="item-number">12</span><span class="item-name">섬유제품;의복제외</span></a></li>
+                <li><a href="#" id="link-13" onclick="loadMap('13', '의복,의복엑세서리및모피제품'); return false;"><span class="item-number">13</span><span class="item-name">의복,의복엑세서리및모피제품</span></a></li>
+                <li><a href="#" id="link-14" onclick="loadMap('14', '가죽,가방및신발제품'); return false;"><span class="item-number">14</span><span class="item-name">가죽,가방및신발제품</span></a></li>
+                <li><a href="#" id="link-15" onclick="loadMap('15', '목재및나무제품(가구제외)'); return false;"><span class="item-number">15</span><span class="item-name">목재및나무제품(가구제외)</span></a></li>
+                <li><a href="#" id="link-16" onclick="loadMap('16', '펄프,종이및종이제품'); return false;"><span class="item-number">16</span><span class="item-name">펄프,종이및종이제품</span></a></li>
+                <li><a href="#" id="link-17" onclick="loadMap('17', '인쇄및기록매체'); return false;"><span class="item-number">17</span><span class="item-name">인쇄및기록매체</span></a></li>
+                <li><a href="#" id="link-18" onclick="loadMap('18', '코크스,연탄및석유정제품'); return false;"><span class="item-number">18</span><span class="item-name">코크스,연탄및석유정제품</span></a></li>
+                <li><a href="#" id="link-19" onclick="loadMap('19', '화합물및화학제품'); return false;"><span class="item-number">19</span><span class="item-name">화합물및화학제품</span></a></li>
+                <li><a href="#" id="link-20" onclick="loadMap('20', '고무제품및플라스틱제품'); return false;"><span class="item-number">20</span><span class="item-name">고무제품및플라스틱제품</span></a></li>
+                <li><a href="#" id="link-21" onclick="loadMap('21', '비금속광물제품'); return false;"><span class="item-number">21</span><span class="item-name">비금속광물제품</span></a></li>
+                <li><a href="#" id="link-22" onclick="loadMap('22', '제1차금속제품'); return false;"><span class="item-number">22</span><span class="item-name">제1차금속제품</span></a></li>
+                <li><a href="#" id="link-23" onclick="loadMap('23', '금속가공제품;기계및가구제외'); return false;"><span class="item-number">23</span><span class="item-name">금속가공제품;기계및가구제외</span></a></li>
+                <li><a href="#" id="link-24" onclick="loadMap('24', '기타기계및장비제조품'); return false;"><span class="item-number">24</span><span class="item-name">기타기계및장비제조품</span></a></li>
+                <li><a href="#" id="link-25" onclick="loadMap('25', '전자부품,컴퓨터,영상,음향및통신장비'); return false;"><span class="item-number">25</span><span class="item-name">전자부품,컴퓨터,영상,음향및통신장비</span></a></li>
+                <li><a href="#" id="link-26" onclick="loadMap('26', '전기장비제품'); return false;"><span class="item-number">26</span><span class="item-name">전기장비제품</span></a></li>
+                <li><a href="#" id="link-27" onclick="loadMap('27', '의료,정밀,광학기기및시계'); return false;"><span class="item-number">27</span><span class="item-name">의료,정밀,광학기기및시계</span></a></li>
+                <li><a href="#" id="link-28" onclick="loadMap('28', '자동차및트레일러'); return false;"><span class="item-number">28</span><span class="item-name">자동차및트레일러</span></a></li>
+                <li><a href="#" id="link-29" onclick="loadMap('29', '기타운송장비'); return false;"><span class="item-number">29</span><span class="item-name">기타운송장비</span></a></li>
+                <li><a href="#" id="link-30" onclick="loadMap('30', '가구제품'); return false;"><span class="item-number">30</span><span class="item-name">가구제품</span></a></li>
+                <li><a href="#" id="link-31" onclick="loadMap('31', '기타제품'); return false;"><span class="item-number">31</span><span class="item-name">기타제품</span></a></li>
+                <li><a href="#" id="link-32" onclick="loadMap('32', '도매제품'); return false;"><span class="item-number">32</span><span class="item-name">도매제품</span></a></li>
+                <li><a href="#" id="link-33" onclick="loadMap('33', '컨테이너'); return false;"><span class="item-number">33</span><span class="item-name">컨테이너</span></a></li>
+                <li><a href="#" id="link-34" onclick="loadMap('34', '전체'); return false;"><span class="item-number">34</span><span class="item-name">전체</span></a></li>
+            </ul>
         </div>
     </div>
-    <div class="content">
-        <iframe name="mapFrame"></iframe>
-    </div>
+
+    <button id="toggle-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+    </button>
 
     <script>
         let currentItemNumber = '01';
         let currentItemName = '농산물';
+
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = document.getElementById('toggle-button');
+
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            toggleButton.classList.toggle('collapsed');
+        });
 
         function loadMap(itemNumber, itemName) {
             currentItemNumber = itemNumber;
@@ -116,7 +261,11 @@
             const filePath = 'OD_maps/' + fileName;
             
             const iframe = document.querySelector('iframe[name="mapFrame"]');
-            iframe.src = filePath;
+            
+            // iframe의 src가 현재 경로와 다를 때만 업데이트하여 불필요한 로딩 방지
+            if (iframe.src.split('/').pop() !== fileName) {
+                 iframe.src = filePath;
+            }
         }
 
         window.onload = function() {
@@ -127,4 +276,3 @@
     </script>
 </body>
 </html>
-    
